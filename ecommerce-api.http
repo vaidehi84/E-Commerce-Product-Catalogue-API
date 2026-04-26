@@ -1,0 +1,232 @@
+@baseUrl = http://localhost:8080/api
+@adminToken = 
+@userToken = 
+
+### ========================================
+### AUTHENTICATION ENDPOINTS
+### ========================================
+
+### Register Admin User
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Admin",
+  "lastName": "User",
+  "email": "admin@example.com",
+  "password": "admin123456"
+}
+
+### Register Regular User
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john@example.com",
+  "password": "user123456"
+}
+
+### Register Another User
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Jane",
+  "lastName": "Smith",
+  "email": "jane@example.com",
+  "password": "user123456"
+}
+
+### Login Admin User
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "admin123456"
+}
+
+### Login Regular User
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "user123456"
+}
+
+### ========================================
+### PRODUCT ENDPOINTS
+### ========================================
+
+### Get All Products
+GET {{baseUrl}}/products
+
+### Get Product by ID
+GET {{baseUrl}}/products/1
+
+### Create Product (Admin Only)
+POST {{baseUrl}}/products
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Gaming Laptop",
+  "description": "High-performance laptop for gaming and development",
+  "sku": "LAPTOP-GAMING-001",
+  "price": 1299.99,
+  "quantity": 5
+}
+
+### Create Another Product
+POST {{baseUrl}}/products
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Wireless Mouse",
+  "description": "Ergonomic wireless mouse with precision tracking",
+  "sku": "MOUSE-WIRELESS-001",
+  "price": 29.99,
+  "quantity": 50
+}
+
+### Create Keyboard Product
+POST {{baseUrl}}/products
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Mechanical Keyboard",
+  "description": "RGB Mechanical Gaming Keyboard",
+  "sku": "KEYBOARD-MECH-001",
+  "price": 149.99,
+  "quantity": 20
+}
+
+### Update Product (Admin Only)
+PUT {{baseUrl}}/products/1
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Gaming Laptop Pro",
+  "description": "Updated high-performance laptop",
+  "sku": "LAPTOP-GAMING-001",
+  "price": 1399.99,
+  "quantity": 8
+}
+
+### Delete Product (Admin Only)
+DELETE {{baseUrl}}/products/1
+Authorization: Bearer {{adminToken}}
+
+### ========================================
+### ORDER ENDPOINTS
+### ========================================
+
+### Place Order (Authenticated User)
+POST {{baseUrl}}/orders
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "items": [
+    {
+      "productId": 2,
+      "quantity": 1
+    },
+    {
+      "productId": 3,
+      "quantity": 2
+    }
+  ]
+}
+
+### Get My Orders
+GET {{baseUrl}}/orders
+Authorization: Bearer {{userToken}}
+
+### Get Order Details
+GET {{baseUrl}}/orders/1
+Authorization: Bearer {{userToken}}
+
+### Update Order Status (Admin Only)
+PUT {{baseUrl}}/orders/1/status?status=CONFIRMED
+Authorization: Bearer {{adminToken}}
+
+### Update Order to Shipped
+PUT {{baseUrl}}/orders/1/status?status=SHIPPED
+Authorization: Bearer {{adminToken}}
+
+### Update Order to Delivered
+PUT {{baseUrl}}/orders/1/status?status=DELIVERED
+Authorization: Bearer {{adminToken}}
+
+### ========================================
+### ERROR CASES (For Testing)
+### ========================================
+
+### Try to Create Product Without Auth
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{
+  "name": "Test Product",
+  "description": "Test",
+  "sku": "TEST-001",
+  "price": 99.99,
+  "quantity": 10
+}
+
+### Try Invalid Email Format
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Test",
+  "lastName": "User",
+  "email": "invalid-email",
+  "password": "pass123"
+}
+
+### Try Short Password
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Test",
+  "lastName": "User",
+  "email": "test@example.com",
+  "password": "123"
+}
+
+### Try to Get Non-existent Product
+GET {{baseUrl}}/products/9999
+
+### Try to Place Order with Non-existent Product
+POST {{baseUrl}}/orders
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "items": [
+    {
+      "productId": 99999,
+      "quantity": 1
+    }
+  ]
+}
+
+### ========================================
+### NOTES
+### ========================================
+### 
+### 1. After registering/logging in, copy the token from response
+### 2. Replace {{adminToken}} with actual admin token
+### 3. Replace {{userToken}} with actual user token
+### 4. Use "Send Request" to execute each endpoint
+### 5. Check Response panel for results
+### 

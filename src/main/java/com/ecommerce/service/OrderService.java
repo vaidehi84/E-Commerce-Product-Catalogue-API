@@ -7,20 +7,24 @@ import com.ecommerce.exception.ResourceNotFoundException;
 import com.ecommerce.repository.OrderRepository;
 import com.ecommerce.repository.ProductRepository;
 import com.ecommerce.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
+import java.util.HashSet;
+import java.util.List;
+import java.math.BigDecimal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.List;
-
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+
+    public OrderService(OrderRepository orderRepository, UserRepository userRepository, ProductRepository productRepository) {
+        this.orderRepository = orderRepository;
+        this.userRepository = userRepository;
+        this.productRepository = productRepository;
+    }
 
     public OrderResponse createOrder(Long userId, OrderRequest request) {
         User user = userRepository.findById(userId)
@@ -31,39 +35,40 @@ public class OrderService {
                 .status(Order.OrderStatus.PENDING)
                 .build();
 
-        request.getItems().forEach(item -> {
-            Product product = productRepository.findById(item.getProductId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + item.getProductId()));
+        List<OrderItem> orderItems = new java.util.ArrayList<>();
+        for (OrderRequest.OrderItemRequest itemRequest : request.getItems()) {
+            Product product = productRepository.findById(itemRequest.getProductId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + itemRequest.getProductId()));
 
-            if (product.getQuantity() < item.getQuantity()) {
+            if (product.getQuantity() < itemRequest.getQuantity()) {
                 throw new IllegalArgumentException("Insufficient stock for product: " + product.getName());
             }
 
             OrderItem orderItem = OrderItem.builder()
                     .order(order)
                     .product(product)
-                    .quantity(item.getQuantity())
+                    .quantity(itemRequest.getQuantity())
                     .price(product.getPrice())
                     .build();
 
-            order.getOrderItems().add(orderItem);
-
-            product.setQuantity(product.getQuantity() - item.getQuantity());
+            product.setQuantity(product.getQuantity() - itemRequest.getQuantity());
             productRepository.save(product);
-        });
+            
+            orderItems.add(orderItem);
+        }
+
+        order.setOrderItems(new HashSet<>(orderItems));
 
         order = orderRepository.save(order);
         return mapToResponse(order);
     }
 
-    @Transactional(readOnly = true)
     public OrderResponse getOrder(Long id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
         return mapToResponse(order);
     }
 
-    @Transactional(readOnly = true)
     public List<OrderResponse> getUserOrders(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
